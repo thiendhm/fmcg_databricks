@@ -1,0 +1,64 @@
+# Metric View Definition for Customer Dimensions
+# This file defines metrics and dimensions for the fmcg.gold.dim_customers table
+# Version controlled in Git for collaboration and tracking
+
+version: 1.1
+
+comment: "Customer dimension metrics for FMCG analysis - includes market, platform, and channel segmentation"
+
+# Source table from Unity Catalog
+source: fmcg.gold.dim_customers
+
+# Dimensions - categorical attributes for slicing and dicing
+dimensions:
+  - name: customer
+    expr: customer
+    comment: "Customer name"
+    display_name: "Customer Name"
+  
+  - name: market
+    expr: market
+    comment: "Geographic market"
+    display_name: "Market"
+  
+  - name: platform
+    expr: platform
+    comment: "Sales platform (e.g., Brick & Mortar, E-Commerce)"
+    display_name: "Platform"
+  
+  - name: channel
+    expr: channel
+    comment: "Distribution channel"
+    display_name: "Channel"
+  
+  - name: market_platform
+    expr: "CONCAT(market, ' - ', platform)"
+    comment: "Combined market and platform dimension"
+    display_name: "Market + Platform"
+
+# Measures - aggregated metrics
+measures:
+  - name: total_customers
+    expr: COUNT(DISTINCT customer_code)
+    comment: "Total number of unique customers"
+    display_name: "Total Customers"
+  
+  - name: customer_count
+    expr: COUNT(*)
+    comment: "Total customer records"
+    display_name: "Customer Count"
+  
+  - name: markets_count
+    expr: COUNT(DISTINCT market)
+    comment: "Number of distinct markets"
+    display_name: "Market Count"
+  
+  - name: platforms_count
+    expr: COUNT(DISTINCT platform)
+    comment: "Number of distinct platforms"
+    display_name: "Platform Count"
+  
+  - name: channels_count
+    expr: COUNT(DISTINCT channel)
+    comment: "Number of distinct channels"
+    display_name: "Channel Count"
