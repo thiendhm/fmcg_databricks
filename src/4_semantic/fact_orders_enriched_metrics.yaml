@@ -1,0 +1,355 @@
+version: 1.1
+source: fmcg.gold.mv_fact_orders_enriched
+comment: FMCG sales metrics with enriched customer, product, and date dimensions
+
+dimensions:
+  # Date Dimensions
+  - name: order_date
+    expr: date
+    display_name: Order Date
+    comment: Date when the order was placed
+    format:
+      type: date
+      date_format: year_month_day
+    synonyms:
+      - date
+      - transaction date
+      - sale date
+
+  - name: order_year
+    expr: year
+    display_name: Year
+    comment: Year of the order
+    synonyms:
+      - year
+
+  - name: order_month
+    expr: month_name
+    display_name: Month
+    comment: Full month name of the order
+    synonyms:
+      - month
+      - month name
+
+  - name: order_month_short
+    expr: month_short_name
+    display_name: Month (Short)
+    comment: Abbreviated month name
+
+  - name: order_quarter
+    expr: quarter
+    display_name: Quarter
+    comment: Quarter of the order (Q1, Q2, Q3, Q4)
+    synonyms:
+      - quarter
+      - qtr
+
+  - name: year_quarter
+    expr: year_quarter
+    display_name: Year-Quarter
+    comment: Year and quarter combined
+    synonyms:
+      - year quarter
+      - YQ
+
+  # Customer Dimensions
+  - name: customer_name
+    expr: customer
+    display_name: Customer
+    comment: Customer name
+    synonyms:
+      - customer
+      - client
+      - buyer
+
+  - name: market
+    expr: market
+    display_name: Market
+    comment: Geographic market or region
+    synonyms:
+      - region
+      - geography
+      - territory
+
+  - name: platform
+    expr: platform
+    display_name: Platform
+    comment: Sales platform (e.g., E-Commerce, Brick & Mortar)
+    synonyms:
+      - channel type
+      - platform type
+
+  - name: channel
+    expr: channel
+    display_name: Channel
+    comment: Distribution channel
+    synonyms:
+      - distribution channel
+      - sales channel
+
+  # Product Dimensions
+  - name: product_division
+    expr: division
+    display_name: Division
+    comment: Product division
+    synonyms:
+      - division
+      - business unit
+
+  - name: product_category
+    expr: category
+    display_name: Category
+    comment: Product category
+    synonyms:
+      - category
+      - product line
+
+  - name: product_name
+    expr: product
+    display_name: Product
+    comment: Product name
+    synonyms:
+      - product
+      - item
+      - SKU
+
+  - name: product_variant
+    expr: variant
+    display_name: Variant
+    comment: Product variant or sub-type
+    synonyms:
+      - variant
+      - sub product
+
+measures:
+  # Core Measures
+  - name: total_sales
+    expr: SUM(total_amount_inr)
+    display_name: Total Sales
+    comment: Total sales revenue in INR
+    format:
+      type: currency
+      currency_code: INR
+      decimal_places:
+        type: exact
+        places: 2
+      abbreviation: compact
+    synonyms:
+      - revenue
+      - sales
+      - total revenue
+      - gross sales
+
+  - name: total_quantity
+    expr: SUM(sold_quantity)
+    display_name: Total Quantity Sold
+    comment: Total number of units sold
+    format:
+      type: number
+      decimal_places:
+        type: exact
+        places: 0
+      abbreviation: compact
+    synonyms:
+      - quantity
+      - units sold
+      - volume
+
+  - name: order_count
+    expr: COUNT(1)
+    display_name: Order Count
+    comment: Total number of orders
+    format:
+      type: number
+      decimal_places:
+        type: exact
+        places: 0
+      abbreviation: compact
+    synonyms:
+      - orders
+      - transaction count
+      - number of orders
+
+  - name: unique_customers
+    expr: COUNT(DISTINCT customer_code)
+    display_name: Unique Customers
+    comment: Number of distinct customers
+    format:
+      type: number
+      decimal_places:
+        type: exact
+        places: 0
+    synonyms:
+      - customer count
+      - distinct customers
+
+  - name: unique_products
+    expr: COUNT(DISTINCT product_code)
+    display_name: Unique Products
+    comment: Number of distinct products sold
+    format:
+      type: number
+      decimal_places:
+        type: exact
+        places: 0
+    synonyms:
+      - product count
+      - SKU count
+
+  # Derived Measures
+  - name: avg_order_value
+    expr: MEASURE(total_sales) / MEASURE(order_count)
+    display_name: Average Order Value
+    comment: Average revenue per order
+    format:
+      type: currency
+      currency_code: INR
+      decimal_places:
+        type: exact
+        places: 2
+    synonyms:
+      - AOV
+      - average transaction value
+      - avg order size
+
+  - name: avg_unit_price
+    expr: MEASURE(total_sales) / MEASURE(total_quantity)
+    display_name: Average Unit Price
+    comment: Average price per unit sold
+    format:
+      type: currency
+      currency_code: INR
+      decimal_places:
+        type: exact
+        places: 2
+    synonyms:
+      - average price
+      - avg selling price
+      - unit price
+
+  - name: avg_quantity_per_order
+    expr: MEASURE(total_quantity) / MEASURE(order_count)
+    display_name: Average Quantity per Order
+    comment: Average number of units per order
+    format:
+      type: number
+      decimal_places:
+        type: exact
+        places: 2
+    synonyms:
+      - avg order size
+      - units per order
+
+  - name: sales_per_customer
+    expr: MEASURE(total_sales) / MEASURE(unique_customers)
+    display_name: Sales per Customer
+    comment: Average sales revenue per customer
+    format:
+      type: currency
+      currency_code: INR
+      decimal_places:
+        type: exact
+        places: 2
+    synonyms:
+      - revenue per customer
+      - customer value
+
+  # Window Measures - Cumulative
+  - name: ytd_sales
+    expr: SUM(total_amount_inr)
+    display_name: Year-to-Date Sales
+    comment: Cumulative sales for the current year
+    format:
+      type: currency
+      currency_code: INR
+      decimal_places:
+        type: exact
+        places: 2
+      abbreviation: compact
+    synonyms:
+      - YTD revenue
+      - year to date sales
+    window:
+      - order: order_date
+        range: cumulative
+        semiadditive: last
+      - order: order_year
+        range: current
+        semiadditive: last
+
+  - name: qtd_sales
+    expr: SUM(total_amount_inr)
+    display_name: Quarter-to-Date Sales
+    comment: Cumulative sales for the current quarter
+    format:
+      type: currency
+      currency_code: INR
+      decimal_places:
+        type: exact
+        places: 2
+      abbreviation: compact
+    synonyms:
+      - QTD revenue
+      - quarter to date sales
+    window:
+      - order: order_date
+        range: cumulative
+        semiadditive: last
+      - order: order_quarter
+        range: current
+        semiadditive: last
+
+  # Window Measures - Trailing
+  - name: t7d_sales
+    expr: SUM(total_amount_inr)
+    display_name: Last 7 Days Sales
+    comment: Total sales for the trailing 7 days
+    format:
+      type: currency
+      currency_code: INR
+      decimal_places:
+        type: exact
+        places: 2
+    synonyms:
+      - weekly sales
+      - 7 day sales
+    window:
+      - order: order_date
+        range: trailing 7 day
+        semiadditive: last
+
+  - name: t30d_sales
+    expr: SUM(total_amount_inr)
+    display_name: Last 30 Days Sales
+    comment: Total sales for the trailing 30 days
+    format:
+      type: currency
+      currency_code: INR
+      decimal_places:
+        type: exact
+        places: 2
+    synonyms:
+      - monthly sales
+      - 30 day sales
+    window:
+      - order: order_date
+        range: trailing 30 day
+        semiadditive: last
+
+  - name: t90d_sales
+    expr: SUM(total_amount_inr)
+    display_name: Last 90 Days Sales
+    comment: Total sales for the trailing 90 days
+    format:
+      type: currency
+      currency_code: INR
+      decimal_places:
+        type: exact
+        places: 2
+    synonyms:
+      - quarterly sales
+      - 90 day sales
+    window:
+      - order: order_date
+        range: trailing 90 day
+        semiadditive: last
